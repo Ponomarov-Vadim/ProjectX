@@ -171,7 +171,7 @@
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Minesweeper";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.Mineswaeper_Load);
             ((System.ComponentModel.ISupportInitialize)(this.GameArea)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureMines)).EndInit();
             this.ResumeLayout(false);
