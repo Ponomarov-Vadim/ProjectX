@@ -16,6 +16,7 @@ namespace ProjectX
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            //Application.Run(new Battleship());
             Application.Run(new Mineswaeper());
         }
     }

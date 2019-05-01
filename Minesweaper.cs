@@ -12,15 +12,15 @@ namespace ProjectX
             InitializeComponent();
         }
 
-        private int[][] Shadow_GameArea;
+        private string[][] Shadow_GameArea; //массив мин
 
         private void Mineswaeper_Load(object sender, EventArgs e)
         {
-            Shadow_GameArea = new int[24][];
+            Shadow_GameArea = new string[24][];
             for (int i = 0; i < 24; i++)
             {
                 GameArea.Columns.Add(i.ToString(), "");
-                Shadow_GameArea[i] = new int[18];
+                Shadow_GameArea[i] = new string[18];
             }
             GameArea.Rows.Add(18);
 
@@ -68,7 +68,6 @@ namespace ProjectX
             direct[6][0] = 1; direct[6][1] = 0;
             direct[7][0] = 1; direct[7][1] = 1;
 
-            GameArea[ColumnIndex, RowIndex].Style.ForeColor = Color.Black;
             GameArea[ColumnIndex, RowIndex].Value = "X";
 
 
@@ -121,9 +120,9 @@ namespace ProjectX
                     {
                         row = 0;
                     }
-                    if ((r % 24) > 0) //--
+                    if ((r % 24) > 0)
                     {
-                        column = (r % 24);//--
+                        column = (r % 24);
                     }
                     else
                     {
@@ -137,7 +136,7 @@ namespace ProjectX
 
                 if (GameArea[column, row].Value.ToString() != "X")
                 {
-                    //writeouts(row, column, r);
+                    //writeouts(row, column, r); // just for test
                     FillMethod(row, column);
                 }
                 else
@@ -196,7 +195,6 @@ namespace ProjectX
             }
             if (e.Button.Equals(MouseButtons.Left))
             {
-                //int validator = GameArea[e.ColumnIndex, e.RowIndex].Value as Int32;
                 if (GameArea[e.ColumnIndex, e.RowIndex].Value.ToString() == "")
                 {
                     GameArea[e.ColumnIndex, e.RowIndex].Value = "0";
@@ -205,7 +203,6 @@ namespace ProjectX
                 else if (GameArea[e.ColumnIndex, e.RowIndex].Value is int)
                 {
                     GameArea[e.ColumnIndex, e.RowIndex].Value = "8";
-                //    ValidationCoopMembers(e.RowIndex, e.ColumnIndex);
                 }
             }
         }
@@ -236,18 +233,20 @@ namespace ProjectX
                 if (ColumnIndex + direct[i][0] >= 0 && RowIndex + direct[i][1] >= 0 &&
                      ColumnIndex + direct[i][0] < GameArea.ColumnCount && RowIndex + direct[i][1] < GameArea.RowCount) //вне поля?
                 {
-                    // заполнить соседние пустые ячейки \/                     
+                    // заполняет соседние пустые ячейки \/                     
                     if (GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value.ToString() == "")    
                     {   
                             GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value = "0";
                             ValidationCoopMembers(RowIndex + direct[i][1], ColumnIndex + direct[i][0]);
-                    } // заполняет соседние пустые ячейки /\
+                    }
+                    // заполняет соседние пустые ячейки /\
 
+                    // заполняет соседние с пустыми цифровые ячейки \/
                     if (GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value is int)
                     {
                         GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value = "8";
-                    //    ValidationCoopMembers(RowIndex + direct[i][1], ColumnIndex + direct[i][0]);
                     }
+                    // заполняет соседние с пустыми цифровые ячейки /\
                 }
             }
         }
@@ -255,6 +254,13 @@ namespace ProjectX
         private void ButtonFull_Click(object sender, EventArgs e)
         {
             PushToAreaMines();
+            for (int i = 0; i < 24; i++)
+            {
+                for (int j = 0; j < 18; j++)
+                {
+                    Shadow_GameArea[i][j] = GameArea[i, j].Value.ToString(); // записывается тень поля с минами и их окружение
+                }
+            }
         }
     }
     //-----------------------------------
