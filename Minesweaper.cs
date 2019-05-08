@@ -14,6 +14,8 @@ namespace ProjectX
 
         private string[][] Shadow_GameArea; //массив мин
 
+        //private bool FirstClick = true;
+
         private void Mineswaeper_Load(object sender, EventArgs e)
         {
             Shadow_GameArea = new string[24][];
@@ -23,17 +25,11 @@ namespace ProjectX
                 Shadow_GameArea[i] = new string[18];
             }
             GameArea.Rows.Add(18);
-
-            FillEmptyValueGameArea();
+            FillArea();
         }
 
         private void FillEmptyValueGameArea()
-        {
-            //DataGridViewButtonColumn btn_info = new DataGridViewButtonColumn();
-            //GameArea.Columns.Add(btn_info); btn_info.HeaderText = "Инфо."; btn_info.Text = "Инфо."; btn_info.Name = "info";
-            //btn_info.UseColumnTextForButtonValue = true; btn_info.Width = 50;
-
-            MinesCounter.Text = "86";
+        {            
             for (int i = 0; i < GameArea.ColumnCount; i++)
             {
                 for (int j = 0; j < GameArea.RowCount; j++)
@@ -69,7 +65,7 @@ namespace ProjectX
             direct[7][0] = 1; direct[7][1] = 1;
 
             GameArea[ColumnIndex, RowIndex].Value = "X";
-
+            MinesCounter.Text = (Convert.ToInt32(MinesCounter.Text.ToString()) + 1).ToString();
 
             for (int i = 0; i < 8; i++)
             {
@@ -90,7 +86,7 @@ namespace ProjectX
                     }
                 }
             }
-        }
+        } // needed refactoring
         // Установка мины и заполнение вокруг цифрой присутствия /\ /\ /\ /\ /\
 
         // Рандомайзер расположения мин \/ \/ \/ \/ \/
@@ -101,8 +97,7 @@ namespace ProjectX
             Random rand = new Random();
 
             for (int j = 0; j < 86; j++)
-            {
-                labelOut.Text = (Convert.ToInt32(labelOut.Text.ToString()) + 1).ToString();
+            {                
                 int r = rand.Next(433);
 
                 if (r < 24)
@@ -136,7 +131,6 @@ namespace ProjectX
 
                 if (GameArea[column, row].Value.ToString() != "X")
                 {
-                    //writeouts(row, column, r); // just for test
                     FillMethod(row, column);
                 }
                 else
@@ -145,18 +139,6 @@ namespace ProjectX
                 }
             }
         }
-        // Рандомайзер расположения мин /\ /\ /\ /\ /\
-
-        /*Just for test
-        public void writeouts(int row, int colum, int rand)
-        {
-            string str = "Rows num =" + row + "; Colums num = " + colum + "; Rand num = " + rand + ";\n";
-            using (StreamWriter s = new StreamWriter("info.txt", true))
-            {
-                s.WriteLine(str);
-            }
-        }
-        */
 
         private Dictionary<int, string> ColorsDictionary = new Dictionary<int, string>()
         {
@@ -168,7 +150,8 @@ namespace ProjectX
         private void GameArea_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             if (GameArea[e.ColumnIndex, e.RowIndex].Value.ToString() != "X" &&
-                !string.IsNullOrEmpty(GameArea[e.ColumnIndex, e.RowIndex].Value.ToString()))
+                !string.IsNullOrEmpty(GameArea[e.ColumnIndex, e.RowIndex].Value.ToString()) &&
+                GameArea[e.ColumnIndex, e.RowIndex].Value.ToString() != "  ")
             {
                 GameArea[e.ColumnIndex, e.RowIndex].Style.ForeColor =
                     Color.FromName(ColorsDictionary[Convert.ToInt32(GameArea[e.ColumnIndex, e.RowIndex].Value.ToString())]);
@@ -190,75 +173,106 @@ namespace ProjectX
         {
             if (e.Button.Equals(MouseButtons.Right))
             {
-                MinesCounter.Text = (Convert.ToInt32(MinesCounter.Text) - 1).ToString();
-
+                if (GameArea[e.ColumnIndex, e.RowIndex].Style.BackColor != Color.Red) // дописать больше вариация просчета мин что бы все совпадало
+                {
+                    MinesCounter.Text = (Convert.ToInt32(MinesCounter.Text) - 1).ToString();
+                    GameArea[e.ColumnIndex, e.RowIndex].Style.BackColor = Color.Red;
+                }
             }
             if (e.Button.Equals(MouseButtons.Left))
             {
-                if (GameArea[e.ColumnIndex, e.RowIndex].Value.ToString() == "")
+                InsertDataInGameArea(e.ColumnIndex, e.RowIndex);
+            }
+        }
+
+        private void InsertDataInGameArea(int columnIndex, int rowIndex)
+        {
+            if (Shadow_GameArea[columnIndex][rowIndex] != "X")
+            {
+                if (Shadow_GameArea[columnIndex][rowIndex] == "")
                 {
-                    GameArea[e.ColumnIndex, e.RowIndex].Value = "0";
-                    ValidationCoopMembers(e.RowIndex, e.ColumnIndex);
+                    GameArea[columnIndex, rowIndex].Value = "  ";
+                    GameArea[columnIndex, rowIndex].Style.BackColor = Color.White;
+                    Shadow_GameArea[columnIndex][rowIndex] = "  ";
+                    AroundSearch(columnIndex, rowIndex);
                 }
-                else if (GameArea[e.ColumnIndex, e.RowIndex].Value is int)
+                else
                 {
-                    GameArea[e.ColumnIndex, e.RowIndex].Value = "8";
+                    GameArea[columnIndex, rowIndex].Value = Shadow_GameArea[columnIndex][rowIndex];
+                    GameArea[columnIndex, rowIndex].Style.BackColor = Color.White;
+                }
+            }
+            else
+            {
+               DialogResult butt = MessageBox.Show("GAME OVER", "End Game", MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning);
+                if (butt == DialogResult.Retry)
+                {
+                    FillArea();
                 }
             }
         }
+
+        private void AroundSearch(int columnIndex, int rowIndex)
+        {
+            for (int i = -1; i < 2; i++)
+            {
+                for (int j = -1; j < 2; j++)
+                {
+                    if (i != 0)
+                    {
+                        if (columnIndex + i >= 0 && columnIndex + i < GameArea.ColumnCount &&
+                            rowIndex + j >= 0 && rowIndex + j < GameArea.RowCount)
+                        {
+                            InsertDataInGameArea(columnIndex + i, rowIndex + j);
+                        }
+                    }
+                    else if (j != 0)
+                    {
+                        if (columnIndex + i >= 0 && columnIndex + i < GameArea.ColumnCount &&
+                        rowIndex + j >= 0 && rowIndex + j < GameArea.RowCount)
+                        {
+                            InsertDataInGameArea(columnIndex + i, rowIndex + j);
+                        }
+                    }
+                }
+            }
+        }
+
         // логика отклика на нажатие кнопок мыши /\ /\ /\ /\ /\
 
-        private void ValidationCoopMembers(int RowIndex, int ColumnIndex)
-        {
-            int[][] direct = new int[8][];
 
-            for (int i = 0; i < 8; i++)
-            {
-                direct[i] = new int[2];
-            }
-
-            direct[0][0] = -1; direct[0][1] = -1;
-            direct[1][0] = -1; direct[1][1] = 0;
-            direct[2][0] = -1; direct[2][1] = 1;
-            direct[3][0] = 0; direct[3][1] = -1;
-            direct[4][1] = 0; direct[4][1] = +1;
-            direct[5][0] = 1; direct[5][1] = -1;
-            direct[6][0] = 1; direct[6][1] = 0;
-            direct[7][0] = 1; direct[7][1] = 1;
-
-            // Ищет соседние с кликом пустые места и заполняет 0
-
-            for (int i = 0; i < 8; i++)
-            {
-                if (ColumnIndex + direct[i][0] >= 0 && RowIndex + direct[i][1] >= 0 &&
-                     ColumnIndex + direct[i][0] < GameArea.ColumnCount && RowIndex + direct[i][1] < GameArea.RowCount) //вне поля?
-                {
-                    // заполняет соседние пустые ячейки \/                     
-                    if (GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value.ToString() == "")    
-                    {   
-                            GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value = "0";
-                            ValidationCoopMembers(RowIndex + direct[i][1], ColumnIndex + direct[i][0]);
-                    }
-                    // заполняет соседние пустые ячейки /\
-
-                    // заполняет соседние с пустыми цифровые ячейки \/
-                    if (GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value is int)
-                    {
-                        GameArea[ColumnIndex + direct[i][0], RowIndex + direct[i][1]].Value = "8";
-                    }
-                    // заполняет соседние с пустыми цифровые ячейки /\
-                }
-            }
-        }
-
+        // записываем тень поля но поле не заполняем
         private void ButtonFull_Click(object sender, EventArgs e)
         {
+            FillArea();
+        }
+
+        private void FillArea()
+        {
+            GameArea.RowsDefaultCellStyle.BackColor = Color.Gray;
+            
+            MinesCounter.Text = "0";
+            FillEmptyValueGameArea();
             PushToAreaMines();
+           
             for (int i = 0; i < 24; i++)
             {
                 for (int j = 0; j < 18; j++)
                 {
                     Shadow_GameArea[i][j] = GameArea[i, j].Value.ToString(); // записывается тень поля с минами и их окружение
+                }
+            }
+            FillEmptyValueGameArea();
+            DefaultColor();
+        }
+
+        public void DefaultColor ()
+        {
+            for (int i = 0; i < 24; i++)
+            {
+                for (int j = 0; j < 18; j++)
+                {
+                    GameArea[i, j].Style.BackColor = Color.Gray;
                 }
             }
         }
